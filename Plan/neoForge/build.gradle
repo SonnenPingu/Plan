@@ -1,0 +1,80 @@
+// 1. PLUGIN: Dies ist jetzt das NeoGradle-Plugin
+plugins {
+    id "net.neoforged.gradle" version "7.0.142" // Aktuelle Version für 1.21.x
+    // 'org.spongepowered.gradle.plugin' und 'shadow' werden entfernt
+}
+
+// 2. VERSION: Wird von NeoGradle für die mods.toml verwendet
+version = fullVersion
+
+dependencies {
+    // 3. ABHÄNGIGKEITEN:
+    // :common bleibt
+    implementation project(":common")
+
+    // Sie müssen die NeoForge/Forge-Versionen dieser Bibliotheken finden
+    implementation "net.playeranalytics:platform-abstraction-layer-forge:$palVersion"
+    implementation "org.bstats:bstats-neoforge:$bstatsVersion"
+
+    implementation "com.google.code.gson:gson:$gsonVersion"
+
+    // Mixin wird von NeoForge ebenfalls unterstützt
+    compileOnly "org.spongepowered:mixin:0.8.7"
+
+    // Test-Abhängigkeiten
+    testImplementation(testFixtures(project(":common")))
+    testImplementation(project(":extensions:adventure"))
+
+    // 'spongeapi' wird entfernt, da Sie jetzt die NeoForge-API verwenden
+    // annotationProcessor "org.spongepowered:spongeapi:$spongeVersion"
+    // testImplementation "org.spongepowered:spongeapi:$spongeVersion"
+}
+
+// 4. KONFIGURATION: Ersetzt den 'sponge'-Block
+neoForge {
+    // Definiert die Minecraft-Version, für die gebaut wird.
+    // Ändern Sie dies für 1.20.6 oder 1.20.4
+    version("1.21")
+
+    // Konfiguriert Ihre 'mods.toml'-Datei (ersetzt die 'sponge.plugin'-Konfiguration)
+    mods {
+        "plan" {
+            modId = "plan"
+            version = project.version
+            displayName = "Plan"
+            description = "Player Analytics Plugin by AuroraLS3"
+            authors = "AuroraLS3"
+            modType = "MOD"
+
+            // WICHTIG: Der 'entrypoint' (Einstiegspunkt) wird jetzt
+            // über eine @Mod("plan") Annotation in Ihrem Java-Code definiert.
+
+            // 5. MOD-ABHÄNGIGKEITEN:
+            // Ersetzt 'sponge.dependency'
+            // 'spongeapi' ist keine Abhängigkeit mehr.
+
+            // LuckPerms
+            dependency("luckperms") {
+                modId = "luckperms"
+                required = false // 'optional'
+                versionRange = "*"
+            }
+
+            // Die reinen Sponge-Plugins (GriefPrevention, Nucleus, RedProtect)
+            // können hier nicht als Abhängigkeit deklariert werden,
+            // da sie in einer NeoForge-Umgebung nicht laufen.
+        }
+    }
+
+    runs {
+        configureEach {
+            // Konfiguration für Testläufe (runClient, runServer)
+        }
+    }
+}
+
+// 6. JAVA-VERSION: Bleibt gleich
+tasks.withType(JavaCompile).configureEach {
+    options.release.set(21) // Java 21 für MC 1.21
+}
+ 
